@@ -15,13 +15,15 @@ Parameters:
     Type: String
     Default: custom-fn-notify-email-1001
 
+  # modify value to a verified SES email
   SenderEmail:
     Type: String
-    Default: temireply@gmail.com
+    Default: fromsomeone@gmail.com
 
+  # modify value to a verified SES email
   RecipientEmail:
     Type: String
-    Default: davidgold0209@gmail.com
+    Default: tosomeone@gmail.com
 
   AWSREGION:
     Type: String
