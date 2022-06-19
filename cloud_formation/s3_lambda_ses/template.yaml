@@ -54,7 +54,7 @@ Resources:
       Timeout: 240
       Code: lambda-email/
 
-  # lambda function ran by the custom function
+  # lambda function for custom resource
   ApplyS3Notification:
     Type: AWS::Lambda::Function
     Properties:
@@ -67,7 +67,7 @@ Resources:
       Code: lambda-notify/
 
 
-  # Custom function to apply notification configuration to s3 bucket
+  # Custom resource to apply notification configuration to s3 bucket
   ApplyNotification:
     Type: Custom::ApplyNotification
     Properties:
@@ -104,7 +104,7 @@ Resources:
                   - ses:SendRawEmail
                 Resource: '*'
 
-  # Role that allows custom function to apply notification permission to s3 bucket
+  # Role that allows custom resource lambda function to apply notification permission to s3 bucket
   ApplyS3NotificationFuncRole:
     Type: AWS::IAM::Role
     Properties:
