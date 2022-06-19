@@ -11,7 +11,7 @@ def handler(event, context):
     
     # Replace recipient@example.com with a "To" address. If your account 
     # is still in the sandbox, this address must be verified.
-    RECIPIENT = "t.adeoti@reply.de"
+    RECIPIENT = "davidgold0209@gmail.com"
     
     OBJECT = event["Records"][0]["s3"]["object"]["key"]
     
