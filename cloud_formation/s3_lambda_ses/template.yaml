@@ -1,0 +1,132 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Send emails notifications when files are uploaded to an s3 bucket
+
+Parameters:
+
+  BucketName:
+    Type: String
+    Default: bkt-notify-email-007
+
+  NotificationLambdaFnName:
+    Type: String
+    Default: fn-notify-email-007
+
+  CustomLambdaFnName:
+    Type: String
+    Default: custom-fn-notify-email-007
+
+Resources:
+
+  S3Bucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      AccessControl: Private
+      BucketName: !Ref BucketName
+
+  # lambda function that sends emails
+  NotificationFunction: 
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Function that sends email notifications for s3 bucket file uploads
+      FunctionName: !Ref NotificationLambdaFnName
+      Handler: email_sender.handler
+      Runtime: python3.8
+      Role: !GetAtt 'NotificationFunctionRole.Arn'
+      Timeout: 240
+      Code: lambda-email/
+
+  
+  # lambda function ran by the custom function
+  ApplyS3Notification:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Function that attaches creates S3 notification config
+      FunctionName: !Ref CustomLambdaFnName
+      Handler: lambda_fn.handler
+      Runtime: python3.8
+      Role: !GetAtt 'ApplyS3NotificationFuncRole.Arn'
+      Timeout: 240
+      Code: lambda-notify/
+
+
+  # Custom function to apply notification configuration to s3 bucket
+  ApplyNotification:
+    Type: Custom::ApplyNotification
+    Properties:
+      ServiceToken: !GetAtt ApplyS3Notification.Arn
+      S3BucketName: !Ref BucketName
+      FunctionARN: !GetAtt 'NotificationFunction.Arn'
+    
+    DependsOn:
+      - S3Bucket
+  
+  # Role for lambda function that sends email. Requires SES policy
+  NotificationFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Path: /
+      Policies:
+        - PolicyName: PolicySendEmailWithSES
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: SendEmailswithSES
+                Effect: Allow
+                Action:
+                  - ses:SendEmail
+                  - ses:SendRawEmail
+                Resource: '*'
+
+  # Role that allows custom function to apply notification permission to s3 bucket
+  ApplyS3NotificationFuncRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Path: /
+      Policies:
+        - PolicyName: S3BucketNotificationPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: AllowBucketNotification
+                Effect: Allow
+                Action: s3:PutBucketNotification
+                Resource:
+                  - !Sub 'arn:aws:s3:::${S3Bucket}'
+                  - !Sub 'arn:aws:s3:::${S3Bucket}/*'
+  
+
+  # permission applied to lambda function to allow it to read s3 notifications
+  S3ToLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:invokeFunction
+      SourceAccount: !Ref AWS::AccountId
+      FunctionName: !Ref NotificationLambdaFnName
+      SourceArn: !GetAtt 'S3Bucket.Arn'
+      Principal: s3.amazonaws.com
+    
+    DependsOn:
+      - NotificationFunction
+
+Outputs:
+  BucketName:
+    Value: !Ref S3Bucket
+    Description: Name of the sample Amazon S3 bucket with a notification configuration.

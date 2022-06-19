@@ -1,0 +1,3 @@
+cloud_formation/misc_templates
+cloud_formation/s3_lambda_ses/lambda-notify/crhelper
+cloud_formation/s3_lambda_ses/lambda-notify/crhelper-2.0.11.dist-info
