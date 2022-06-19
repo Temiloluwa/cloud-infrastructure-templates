@@ -1,5 +1,5 @@
 # source: https://docs.aws.amazon.com/ses/latest/dg/send-an-email-using-sdk-programmatically.html
-
+import os
 import boto3
 from botocore.exceptions import ClientError
 
@@ -7,18 +7,17 @@ def handler(event, context):
     
     # Replace sender@example.com with your "From" address.
     # This address must be verified with Amazon SES.
-    SENDER = "temireply@gmail.com"
-    
+    SENDER = os.environ['sender']
     # Replace recipient@example.com with a "To" address. If your account 
     # is still in the sandbox, this address must be verified.
-    RECIPIENT = "davidgold0209@gmail.com"
+    RECIPIENT = os.environ['recipient']
+
+    AWS_REGION = os.environ['awsregion']
     
     OBJECT = event["Records"][0]["s3"]["object"]["key"]
     
     BUCKET = event["Records"][0]["s3"]["bucket"]["name"]
     
-    # If necessary, replace us-west-2 with the AWS Region you're using for Amazon SES.
-    AWS_REGION = "us-east-1"
     
     # The subject line for the email.
     SUBJECT = "File Uploaded to S3 bucket"

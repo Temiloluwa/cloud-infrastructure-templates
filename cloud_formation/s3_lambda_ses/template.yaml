@@ -5,15 +5,27 @@ Parameters:
 
   BucketName:
     Type: String
-    Default: bkt-notify-email-007
+    Default: bkt-notify-email-1001
 
   NotificationLambdaFnName:
     Type: String
-    Default: fn-notify-email-007
+    Default: fn-notify-email-1001
 
   CustomLambdaFnName:
     Type: String
-    Default: custom-fn-notify-email-007
+    Default: custom-fn-notify-email-1001
+
+  SenderEmail:
+    Type: String
+    Default: temireply@gmail.com
+
+  RecipientEmail:
+    Type: String
+    Default: davidgold0209@gmail.com
+
+  AWSREGION:
+    Type: String
+    Default: us-east-1
 
 Resources:
 
@@ -29,13 +41,17 @@ Resources:
     Properties:
       Description: Function that sends email notifications for s3 bucket file uploads
       FunctionName: !Ref NotificationLambdaFnName
+      Environment:
+        Variables:
+          sender: !Ref SenderEmail
+          recipient: !Ref RecipientEmail
+          awsregion: !Ref AWSREGION
       Handler: email_sender.handler
       Runtime: python3.8
       Role: !GetAtt 'NotificationFunctionRole.Arn'
       Timeout: 240
       Code: lambda-email/
 
-  
   # lambda function ran by the custom function
   ApplyS3Notification:
     Type: AWS::Lambda::Function
